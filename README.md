@@ -1,6 +1,5 @@
 #HW3 Producer-Consumer using Pthreads
-#### First-Name Last-Name
-TODO - Update your name in this readme.
+#### PaoYang Tan
 
 ## Problem statement:
 
