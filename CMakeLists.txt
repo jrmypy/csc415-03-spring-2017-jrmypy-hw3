@@ -4,5 +4,5 @@ project(hw3)
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 add_definitions(-std=c99)
 
-set(SOURCE_FILES main.cpp)
+set(SOURCE_FILES main.c)
 add_executable(hw3 ${SOURCE_FILES})
