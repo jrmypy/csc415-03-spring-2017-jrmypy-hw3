@@ -4,9 +4,8 @@
 #include <semaphore.h>
 #include <math.h>
 
-
 #define SIZE 10
-int NUMB_THREADS = 10;
+int NUMBER_OF_THREADS = 10;
 double itemsProduced;
 double numProducer;
 double numConsumer;
@@ -23,30 +22,30 @@ sem_t emptyCount;
 sem_t filledCount;
 pthread_mutex_t buffer_mutex;
 
-void insertItemBuffer(buffer_t value) {
+void insertItemToBuffer(buffer_t value) {
   if(buffer_index < SIZE) {
     buffer[buffer_index++] = value;
   }
 }
 
-buffer_t removeItemBuffer() {
+buffer_t removeItemFromBuffer() {
   if(buffer_index > 0) {
-    return buffer[--buffer_index]; // buffer_index-- would be error!
+    return buffer[--buffer_index];
   }
   return 0;
 }
 
 
-int isempty() {
-  if (buffer_index == 0) {
+int isEmpty() {
+  if(buffer_index == 0) {
     return TRUE;
   } else {
     return FALSE;
   }
 }
 
-int isfull() {
-  if (buffer_index == SIZE) {
+int isFull() {
+  if(buffer_index == SIZE) {
     return TRUE;
   } else {
     return FALSE;
@@ -55,7 +54,6 @@ int isfull() {
 
 void *producer(void *thread_n) {
   int thread_number = *(int *)thread_n;
-//  int thread_number = (int)(uintptr_t)thread_n;
   buffer_t value;
   int count = 0;
   int i=0;
@@ -68,12 +66,11 @@ void *producer(void *thread_n) {
       pthread_mutex_unlock(&buffer_mutex);
       sem_wait(&emptyCount);
       pthread_mutex_lock(&buffer_mutex);
-    } while(isfull());
-    insertItemBuffer(value);
+    } while(isFull());
+    insertItemToBuffer(value);
     pthread_mutex_unlock(&buffer_mutex);
     sem_post(&filledCount);
     printf("Producer %d added %d to buffer\n", thread_number, value);
-//    if (i % 2 == 1) sleep(1);
   }
   pthread_exit(0);
 }
@@ -92,13 +89,13 @@ void *consumer(void *thread_n) {
         pthread_mutex_unlock(&buffer_mutex);
         sem_wait(&filledCount);
         pthread_mutex_lock(&buffer_mutex);
-      } while (isempty());
-      value = removeItemBuffer(value);
+      } while (isEmpty());
+      value = removeItemFromBuffer(value);
       pthread_mutex_unlock(&buffer_mutex);
       sem_post(&emptyCount);
       printf("Consumer %d dequeue %d from buffer\n", thread_number, value);
     }
-  } else if(numProducer < numConsumer){
+  } else if(numProducer < numConsumer) {
     int difference = itemsProduced / numConsumer;
 
     while(i++ < difference) {
@@ -108,8 +105,8 @@ void *consumer(void *thread_n) {
         pthread_mutex_unlock(&buffer_mutex);
         sem_wait(&filledCount);
         pthread_mutex_lock(&buffer_mutex);
-      } while (isempty());
-      value = removeItemBuffer(value);
+      } while (isEmpty());
+      value = removeItemFromBuffer(value);
       pthread_mutex_unlock(&buffer_mutex);
       sem_post(&emptyCount);
       printf("Consumer %d dequeue %d from buffer\n", thread_number, value);
@@ -124,8 +121,8 @@ void *consumer(void *thread_n) {
         pthread_mutex_unlock(&buffer_mutex);
         sem_wait(&filledCount);
         pthread_mutex_lock(&buffer_mutex);
-      } while (isempty());
-      value = removeItemBuffer(value);
+      } while (isEmpty());
+      value = removeItemFromBuffer(value);
       pthread_mutex_unlock(&buffer_mutex);
       sem_post(&emptyCount);
       printf("Consumer %d dequeue %d from buffer\n", thread_number, value);
@@ -144,21 +141,10 @@ int main(int argc, char *argv[]) {
   itemsProduced = pow(2, (double)atoi(argv[3]));
 
   pthread_mutex_init(&buffer_mutex, NULL);
-  sem_init(&emptyCount, // sem_t *sem
-           0, // int pshared. 0 = shared between threads of process,  1 = shared between processes
-           SIZE); // unsigned int value. Initial value
-  sem_init(&filledCount,
-           0,
-           0);
-  /* emptyCount is initialized to buffer size because SIZE number of
-     producers can add one element to buffer each. They will wait
-     semaphore each time, which will decrement semaphore value.
-     filledCount is initialized to 0, because buffer starts empty and
-     consumer cannot take any element from it. They will have to wait
-     until producer posts to that semaphore (increments semaphore
-     value) */
-  pthread_t thread[NUMB_THREADS];
-  int thread_numb[NUMB_THREADS];
+  sem_init(&emptyCount, 0, SIZE);
+  sem_init(&filledCount, 0, 0);
+  pthread_t thread[NUMBER_OF_THREADS];
+  int thread_numb[NUMBER_OF_THREADS];
   int i;
   int totalItemsProduced = 0;
   int joined;
@@ -169,7 +155,7 @@ int main(int argc, char *argv[]) {
     joined = numConsumer;
   }
 
-  for (i = 0; i < numProducer; ) {
+  for (i = 0; i < numProducer;) {
     thread_numb[i] = i;
     pthread_create(thread + i, NULL, producer, thread_numb + i);
     i++;
@@ -177,13 +163,14 @@ int main(int argc, char *argv[]) {
     totalItemsProduced += itemsProduced;
   }
 
-    for(i = 0; i < numConsumer; ) {
-      pthread_create(&thread[i], NULL, consumer, &thread_numb[i]);
-      i++;
-    }
+  for(i = 0; i < numConsumer;) {
+    pthread_create(&thread[i], NULL, consumer, &thread_numb[i]);
+    i++;
+  }
 
-  for(i = 0; i < joined; i++)
+  for(i = 0; i < joined; i++) {
     pthread_join(thread[i], NULL);
+  }
 
   pthread_mutex_destroy(&buffer_mutex);
   sem_destroy(&emptyCount);
