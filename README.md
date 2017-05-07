@@ -1,6 +1,13 @@
 #HW3 Producer-Consumer using Pthreads
 #### PaoYang Tan
 
+## Write-Up of Homework:
+Each producer produces 32 items.
+1 producer and 2 consumers: Each consumer consumes 16 items.
+2 producers and 1 consumer: Consumer consumes 64 items.
+2 producers and 4 consumers: Each consumer consumes 8 items.
+4 producers and 2 consumers: Each consumer consumes 64 items. 
+
 ## Problem statement:
 
 Implement a multi-threaded producer-consumer program using a bounded buffer. Use full and empty semaphores to keep track of the numbers of full and empty slots available to the consumers and producers, respectively. Use a mutex to coordinate access to the buffer (once the thread determines that there is an available slot via the appropriate semaphore). The number of producers, the number of consumers, and the number of items each producer produces should be specified by their binary log as command-line parameters. Thus, the following command should generate 8 producers, 16 consumers, and 64 items produced by each producer:
